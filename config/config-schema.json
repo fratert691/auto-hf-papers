@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HF Papers Digest Config",
+  "description": "User configuration stored at ~/.hf-papers/config.json",
+  "type": "object",
+  "properties": {
+    "onboardingComplete": {
+      "type": "boolean",
+      "description": "Set to true after onboarding is finished",
+      "default": false
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "zh", "bilingual"],
+      "description": "Digest language: English, Chinese, or bilingual (interleaved)",
+      "default": "en"
+    },
+    "upvoteThreshold": {
+      "type": "integer",
+      "description": "Minimum upvotes for a paper to be included",
+      "default": 20,
+      "minimum": 0
+    },
+    "githubStarsThreshold": {
+      "type": "integer",
+      "description": "Minimum GitHub stars for a paper's repo to qualify for inclusion",
+      "default": 100,
+      "minimum": 0
+    },
+    "deliveryMethod": {
+      "type": "string",
+      "enum": ["stdout", "telegram", "email"],
+      "description": "How to deliver the digest",
+      "default": "stdout"
+    },
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone string, e.g. Asia/Shanghai",
+      "default": "UTC"
+    },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "frequency": {
+          "type": "string",
+          "enum": ["daily", "weekly"],
+          "default": "daily"
+        },
+        "time": {
+          "type": "string",
+          "description": "Time of day in HH:MM format",
+          "default": "09:00"
+        },
+        "weekday": {
+          "type": "string",
+          "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+          "description": "For weekly frequency only"
+        }
+      }
+    },
+    "telegram": {
+      "type": "object",
+      "properties": {
+        "chatId": {
+          "type": "string",
+          "description": "Telegram chat ID or channel ID to send messages to"
+        }
+      }
+    },
+    "email": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address to send the digest to"
+        }
+      }
+    }
+  }
+}

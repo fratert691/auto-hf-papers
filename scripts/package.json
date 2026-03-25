@@ -1,0 +1,13 @@
+{
+  "name": "auto-hf-papers-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for fetching and delivering HuggingFace daily papers digest",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "fetch": "node fetch-papers.js",
+    "deliver": "node deliver.js"
+  }
+}

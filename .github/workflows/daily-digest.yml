@@ -1,0 +1,73 @@
+name: Daily HuggingFace Papers Digest
+
+on:
+  schedule:
+    # Run daily at 02:00 UTC (10:00 AM Beijing time, UTC+8)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date to fetch (YYYY-MM-DD), leave empty for today'
+        required: false
+        default: ''
+      upvotes:
+        description: 'Upvote threshold (default: 20)'
+        required: false
+        default: '20'
+      stars:
+        description: 'GitHub stars threshold (default: 100)'
+        required: false
+        default: '100'
+      language:
+        description: 'Digest language: en / zh / bilingual (default: en)'
+        required: false
+        default: 'en'
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch and filter papers
+        run: |
+          node scripts/fetch-papers.js \
+            --date="${{ github.event.inputs.date || '' }}" \
+            --upvotes="${{ github.event.inputs.upvotes || '20' }}" \
+            --stars="${{ github.event.inputs.stars || '100' }}" \
+            > /tmp/feed-papers.json
+
+          node -e "
+            const d = JSON.parse(require('fs').readFileSync('/tmp/feed-papers.json', 'utf8'));
+            console.log('Date:', d.date);
+            console.log('Total papers submitted:', d.stats.total);
+            console.log('Papers matched filters:', d.stats.filtered);
+            d.papers.forEach(p => console.log(' -', p.upvotes, 'upvotes |', p.githubStars, 'stars |', p.title));
+          "
+
+      - name: Generate digest via Claude API
+        run: |
+          node scripts/generate-digest.js \
+            --input=/tmp/feed-papers.json \
+            --language="${{ github.event.inputs.language || 'en' }}" \
+            > /tmp/digest.txt
+
+          echo "--- Digest preview ---"
+          head -c 800 /tmp/digest.txt
+          echo ""
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Send digest via email
+        run: node scripts/deliver.js --file=/tmp/digest.txt
+        env:
+          DELIVERY_METHOD: email
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          TO_EMAIL: ${{ secrets.TO_EMAIL }}
