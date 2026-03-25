@@ -9,9 +9,8 @@ from pathlib import Path
 from app.clients import (
     FetchError,
     GithubRateLimitError,
-    fetch_daily_papers_html,
+    fetch_daily_papers,
     fetch_github_stars,
-    parse_daily_papers,
 )
 from app.logic import qualify_paper
 from app.render import render_markdown
@@ -60,8 +59,7 @@ def main() -> int:
     date_str = args.date or datetime.now().astimezone().date().isoformat()
 
     try:
-        html_text = fetch_daily_papers_html(date_str)
-        candidates = parse_daily_papers(html_text)
+        candidates = fetch_daily_papers(date_str)
     except FetchError as exc:
         print(f"[error] {exc}")
         return 1

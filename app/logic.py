@@ -45,32 +45,37 @@ def build_brief_zh(
     upvote_threshold: int,
     stars_threshold: int,
 ) -> str:
-    base_summary = paper.ai_summary or paper.summary or "Hugging Face 页面没有提供可用摘要。"
-    base_summary = _ensure_terminal_punctuation(base_summary)
+    # English summary (ai_summary is one sentence; fall back to full abstract)
+    base_summary = paper.ai_summary or paper.summary or ""
+    base_summary = _ensure_terminal_punctuation(base_summary) if base_summary else ""
 
+    # Chinese metadata: why this paper was selected
     reason_parts: list[str] = []
     if qualified_by in {"upvotes", "both"}:
-        reason_parts.append(
-            f"Hugging Face 当日获得 {paper.upvotes} 个 upvotes，高于阈值 {upvote_threshold}"
-        )
+        reason_parts.append(f"HF upvotes {paper.upvotes}（阈值 > {upvote_threshold}）")
     if qualified_by in {"github_stars", "both"} and github_stars is not None:
-        reason_parts.append(
-            f"关联 GitHub 仓库当前约 {github_stars} stars，高于阈值 {stars_threshold}"
-        )
+        reason_parts.append(f"GitHub stars {github_stars}（阈值 > {stars_threshold}）")
+    reason_text = "，".join(reason_parts) if reason_parts else "满足筛选条件"
 
-    reason_text = "；".join(reason_parts) if reason_parts else "满足筛选条件"
-    link_hint = "可继续查看 Hugging Face 论文页"
     if paper.github_repo and paper.project_page:
-        link_hint = "可继续查看 Hugging Face 页面、GitHub 仓库和项目页"
+        link_hint = "附有 GitHub 仓库和项目页"
     elif paper.github_repo:
-        link_hint = "可继续查看 Hugging Face 页面和 GitHub 仓库"
+        link_hint = "附有 GitHub 仓库"
     elif paper.project_page:
-        link_hint = "可继续查看 Hugging Face 页面和项目页"
+        link_hint = "附有项目页"
+    else:
+        link_hint = ""
 
-    return (
-        f"这篇论文《{paper.title}》的核心内容是：{base_summary} "
-        f"之所以值得优先关注，是因为它{reason_text}。{link_hint}。"
-    )
+    lines: list[str] = []
+    if base_summary:
+        lines.append(base_summary)
+        lines.append("")
+    entry = f"入选原因：{reason_text}。"
+    if link_hint:
+        entry += link_hint + "。"
+    lines.append(entry)
+
+    return "\n".join(lines)
 
 
 def _ensure_terminal_punctuation(text: str) -> str:

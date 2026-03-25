@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import html
 import json
-import re
 import time
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -11,7 +9,7 @@ from urllib.request import Request, urlopen
 
 from app.models import PaperCandidate
 
-HF_DAILY_URL = "https://huggingface.co/papers/date/{date}"
+HF_API_URL = "https://huggingface.co/api/daily_papers?date={date}"
 DEFAULT_TIMEOUT = 20
 USER_AGENT = "auto-hf-papers/0.1 (+https://github.com)"
 
@@ -36,41 +34,50 @@ def fetch_json(url: str, headers: dict[str, str] | None = None, timeout: int = D
     return json.loads(fetch_text(url, headers=headers, timeout=timeout))
 
 
-def fetch_daily_papers_html(date: str) -> str:
-    return fetch_text(HF_DAILY_URL.format(date=date))
-
-
-def parse_daily_papers(html_text: str) -> list[PaperCandidate]:
-    match = re.search(r'data-target="DailyPapers"\s+data-props="([^"]+)"', html_text)
-    if not match:
-        raise FetchError("Could not find DailyPapers payload in Hugging Face HTML")
-
+def fetch_daily_papers(date: str) -> list[PaperCandidate]:
+    """Fetch papers from the HuggingFace daily papers JSON API."""
+    url = HF_API_URL.format(date=date)
     try:
-        payload = json.loads(html.unescape(match.group(1)))
-    except json.JSONDecodeError as exc:
-        raise FetchError(f"Failed to decode DailyPapers payload: {exc}") from exc
+        data = fetch_json(url)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise FetchError(f"Failed to decode HuggingFace API response: {exc}") from exc
 
+    if not isinstance(data, list):
+        raise FetchError(
+            f"Unexpected HuggingFace API response format: expected a list, got {type(data).__name__}"
+        )
+
+    return _parse_api_response(data)
+
+
+def _parse_api_response(data: list[Any]) -> list[PaperCandidate]:
+    """Parse the HuggingFace daily papers API JSON array into PaperCandidate objects."""
     papers: list[PaperCandidate] = []
-    for entry in payload.get("dailyPapers", []):
-        paper = entry.get("paper", {})
+    for entry in data:
+        if not isinstance(entry, dict):
+            continue
+        paper = entry.get("paper") or {}
+        if not isinstance(paper, dict):
+            continue
+
         paper_id = str(paper.get("id") or "").strip()
         if not paper_id:
             continue
 
-        authors = []
-        for author in paper.get("authors", []):
-            name = str(author.get("name") or "").strip()
-            if name:
-                authors.append(name)
+        authors = [
+            str(a.get("name") or "").strip()
+            for a in paper.get("authors") or []
+            if isinstance(a, dict) and a.get("name")
+        ]
 
         papers.append(
             PaperCandidate(
                 paper_id=paper_id,
-                title=str(entry.get("title") or paper.get("title") or paper_id).strip(),
+                title=str(paper.get("title") or paper_id).strip(),
                 hf_url=f"https://huggingface.co/papers/{paper_id}",
-                published_at=paper.get("publishedAt") or entry.get("publishedAt"),
+                published_at=paper.get("publishedAt"),
                 upvotes=int(paper.get("upvotes") or 0),
-                summary=_clean_text(paper.get("summary") or entry.get("summary")),
+                summary=_clean_text(paper.get("summary")),
                 ai_summary=_clean_text(paper.get("ai_summary")),
                 github_repo=normalize_github_repo_url(paper.get("githubRepo")),
                 project_page=_clean_url(paper.get("projectPage")),
